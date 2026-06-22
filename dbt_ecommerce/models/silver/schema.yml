@@ -1,0 +1,136 @@
+version: 2
+
+models:
+  - name: silver_vendas
+    description: "Vendas limpas com colunas temporais calculadas e receita_total. Relacao 1:1 com bronze_vendas."
+    columns:
+      - name: id_venda
+        description: "PK - ID unico da venda"
+        tests: [not_null, unique]
+      - name: id_cliente
+        description: "FK -> silver_clientes.id_cliente"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('silver_clientes')
+                field: id_cliente
+      - name: id_produto
+        description: "FK -> silver_produtos.id_produto — 20 registros sem produto correspondente detectados na fonte"
+        tests:
+          - not_null
+          - relationships:
+              config:
+                severity: warn
+              arguments:
+                to: ref('silver_produtos')
+                field: id_produto
+      - name: quantidade
+        description: "Quantidade de itens vendidos"
+        tests: [not_null]
+      - name: preco_venda
+        description: "Preco unitario praticado na venda"
+        tests: [not_null]
+      - name: data_venda
+        description: "Timestamp original da venda"
+        tests: [not_null]
+      - name: canal_venda
+        description: "Canal de venda"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['ecommerce', 'loja_fisica']
+      - name: receita_total
+        description: "Coluna calculada: quantidade * preco_venda"
+        tests: [not_null]
+      - name: data_venda_date
+        description: "Coluna calculada: data sem hora (DATE)"
+        tests: [not_null]
+      - name: ano_venda
+        description: "Coluna calculada: ano extraido de data_venda"
+        tests: [not_null]
+      - name: mes_venda
+        description: "Coluna calculada: mes extraido de data_venda (1-12)"
+        tests: [not_null]
+      - name: dia_venda
+        description: "Coluna calculada: dia do mes extraido de data_venda (1-31)"
+        tests: [not_null]
+      - name: dia_semana
+        description: "Coluna calculada: dia da semana (0=Domingo, 6=Sabado)"
+        tests: [not_null]
+      - name: hora_venda
+        description: "Coluna calculada: hora extraida de data_venda (0-23)"
+        tests: [not_null]
+
+  - name: silver_clientes
+    description: "Clientes limpos. Pass-through do bronze_clientes sem colunas calculadas."
+    columns:
+      - name: id_cliente
+        description: "PK - ID unico do cliente"
+        tests: [not_null, unique]
+      - name: nome_cliente
+        description: "Nome completo do cliente"
+        tests: [not_null]
+      - name: estado
+        description: "Estado (UF) do cliente"
+        tests: [not_null]
+      - name: pais
+        description: "Pais do cliente"
+        tests: [not_null]
+      - name: data_cadastro
+        description: "Data e hora de cadastro (timestamp)"
+        tests: [not_null]
+
+  - name: silver_produtos
+    description: "Produtos limpos com faixa_preco calculada. Relacao 1:1 com bronze_produtos."
+    columns:
+      - name: id_produto
+        description: "PK - ID unico do produto"
+        tests: [not_null, unique]
+      - name: nome_produto
+        description: "Nome do produto"
+        tests: [not_null]
+      - name: categoria
+        description: "Categoria do produto"
+        tests: [not_null]
+      - name: marca
+        description: "Marca do produto"
+        tests: [not_null]
+      - name: preco_atual
+        description: "Preco atual de venda"
+        tests: [not_null]
+      - name: data_criacao
+        description: "Data de criacao no catalogo (timestamp)"
+        tests: [not_null]
+      - name: faixa_preco
+        description: "Coluna calculada: PREMIUM (>1000) / MEDIO (>500) / BASICO (<=500)"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['PREMIUM', 'MEDIO', 'BASICO']
+
+  - name: silver_preco_competidores
+    description: "Precos de concorrentes com data_coleta_date calculada. Relacao 1:1 com bronze_preco_competidores."
+    columns:
+      - name: id_produto
+        description: "FK -> silver_produtos.id_produto"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('silver_produtos')
+                field: id_produto
+      - name: nome_concorrente
+        description: "Nome do concorrente monitorado"
+        tests: [not_null]
+      - name: preco_concorrente
+        description: "Preco praticado pelo concorrente"
+        tests: [not_null]
+      - name: data_coleta
+        description: "Timestamp original da coleta"
+        tests: [not_null]
+      - name: data_coleta_date
+        description: "Coluna calculada: data sem hora (DATE)"
+        tests: [not_null]

@@ -1,0 +1,27 @@
+version: 2
+
+exposures:
+
+  - name: dashboard_ecommerce
+    type: dashboard
+    description: "Dashboard de acompanhamento do negocio consumindo os KPIs gold."
+    owner:
+      name: Data Team
+      email: aurelianojsn@gmail.com
+    depends_on:
+      - ref('vendas_temporais')
+      - ref('clientes_segmentacao')
+      - ref('precos_competitividade')
+    url: "case-01-dashboard/"
+
+  - name: agente_ia_ecommerce
+    type: application
+    description: "Agente de IA que consulta os modelos gold para responder perguntas de negocio."
+    owner:
+      name: Data Team
+      email: aurelianojsn@gmail.com
+    depends_on:
+      - ref('vendas_temporais')
+      - ref('clientes_segmentacao')
+      - ref('precos_competitividade')
+    url: "case-02-agente/"

@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: precos_competitividade
+    description: "KPI de competitividade de precos vs concorrentes. Responde: como estamos posicionados em relacao ao mercado?"
+    columns:
+      - name: produto_id
+        description: "PK - ID do produto"
+        tests: [not_null, unique]
+      - name: nome_produto
+        description: "Nome do produto"
+        tests: [not_null]
+      - name: categoria
+        description: "Categoria do produto"
+        tests: [not_null]
+      - name: marca
+        description: "Marca do produto"
+        tests: [not_null]
+      - name: nosso_preco
+        description: "Preco atual praticado pela empresa"
+        tests: [not_null]
+      - name: preco_medio_concorrentes
+        description: "Media de precos dos concorrentes monitorados"
+        tests: [not_null]
+      - name: preco_minimo_concorrentes
+        description: "Menor preco encontrado entre os concorrentes"
+        tests: [not_null]
+      - name: preco_maximo_concorrentes
+        description: "Maior preco encontrado entre os concorrentes"
+        tests: [not_null]
+      - name: total_concorrentes
+        description: "Numero de concorrentes com dados coletados para este produto"
+        tests: [not_null]
+      - name: diferenca_percentual_vs_media
+        description: "Diferenca percentual do nosso preco em relacao a media dos concorrentes. Positivo = mais caro."
+      - name: diferenca_percentual_vs_minimo
+        description: "Diferenca percentual do nosso preco em relacao ao concorrente mais barato. Positivo = mais caro."
+      - name: classificacao_preco
+        description: "Posicionamento de preco: MAIS_CARO_QUE_TODOS / ACIMA_DA_MEDIA / NA_MEDIA / ABAIXO_DA_MEDIA / MAIS_BARATO_QUE_TODOS"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['MAIS_CARO_QUE_TODOS', 'ACIMA_DA_MEDIA', 'NA_MEDIA', 'ABAIXO_DA_MEDIA', 'MAIS_BARATO_QUE_TODOS']
+      - name: receita_total
+        description: "Receita total acumulada deste produto"
+        tests: [not_null]
+      - name: quantidade_total
+        description: "Quantidade total de unidades vendidas deste produto"
+        tests: [not_null]

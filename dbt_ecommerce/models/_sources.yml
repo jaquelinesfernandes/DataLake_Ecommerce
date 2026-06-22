@@ -1,0 +1,110 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Tabelas brutas do banco de dados PostgreSQL (schema public no Supabase). Fonte original sem transformacao."
+    schema: public
+    database: postgres
+
+    tables:
+      - name: vendas
+        description: "Transacoes de venda realizadas. Cada linha representa um item vendido."
+        loaded_at_field: data_venda
+        freshness:
+          warn_after: {count: 6, period: hour}
+          error_after: {count: 24, period: hour}
+        columns:
+          - name: id_venda
+            description: "PK - ID unico da venda"
+            tests: [not_null, unique]
+          - name: data_venda
+            description: "Data e hora da venda (timestamp)"
+            tests: [not_null]
+          - name: id_cliente
+            description: "FK -> clientes.id_cliente"
+            tests: [not_null]
+          - name: id_produto
+            description: "FK -> produtos.id_produto"
+            tests: [not_null]
+          - name: canal_venda
+            description: "Canal de venda (ecommerce, loja_fisica)"
+            tests:
+              - not_null
+              - accepted_values:
+                  arguments:
+                    values: ['ecommerce', 'loja_fisica']
+          - name: quantidade
+            description: "Quantidade de itens vendidos"
+            tests: [not_null]
+          - name: preco_unitario
+            description: "Preco unitario praticado na venda"
+            tests: [not_null]
+
+      - name: clientes
+        description: "Cadastro de clientes."
+        loaded_at_field: data_cadastro
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 72, period: hour}
+        columns:
+          - name: id_cliente
+            description: "PK - ID unico do cliente"
+            tests: [not_null, unique]
+          - name: nome_cliente
+            description: "Nome completo do cliente"
+            tests: [not_null]
+          - name: estado
+            description: "Estado (UF) do cliente"
+            tests: [not_null]
+          - name: pais
+            description: "Pais do cliente"
+            tests: [not_null]
+          - name: data_cadastro
+            description: "Data e hora de cadastro do cliente (timestamp)"
+            tests: [not_null]
+
+      - name: produtos
+        description: "Catalogo de produtos disponiveis para venda."
+        loaded_at_field: data_criacao
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 72, period: hour}
+        columns:
+          - name: id_produto
+            description: "PK - ID unico do produto"
+            tests: [not_null, unique]
+          - name: nome_produto
+            description: "Nome do produto"
+            tests: [not_null]
+          - name: categoria
+            description: "Categoria do produto"
+            tests: [not_null]
+          - name: marca
+            description: "Marca do produto"
+            tests: [not_null]
+          - name: preco_atual
+            description: "Preco atual de venda do produto"
+            tests: [not_null]
+          - name: data_criacao
+            description: "Data de criacao do produto no catalogo (timestamp)"
+            tests: [not_null]
+
+      - name: preco_competidores
+        description: "Precos coletados periodicamente de concorrentes para os mesmos produtos."
+        loaded_at_field: data_coleta
+        freshness:
+          warn_after: {count: 12, period: hour}
+          error_after: {count: 48, period: hour}
+        columns:
+          - name: id_produto
+            description: "FK -> produtos.id_produto"
+            tests: [not_null]
+          - name: nome_concorrente
+            description: "Nome do concorrente monitorado"
+            tests: [not_null]
+          - name: preco_concorrente
+            description: "Preco praticado pelo concorrente no momento da coleta"
+            tests: [not_null]
+          - name: data_coleta
+            description: "Data e hora da coleta do preco (timestamp)"
+            tests: [not_null]

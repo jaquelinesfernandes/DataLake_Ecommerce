@@ -1,0 +1,43 @@
+version: 2
+
+models:
+  - name: vendas_temporais
+    description: "KPI de vendas agregadas por data e hora. Responde: como evoluiu o faturamento ao longo do tempo?"
+    columns:
+      - name: data_venda
+        description: "Data da venda (DATE)"
+        tests: [not_null]
+      - name: ano_venda
+        description: "Ano da venda"
+        tests: [not_null]
+      - name: mes_venda
+        description: "Mes da venda (1-12)"
+        tests: [not_null]
+      - name: dia_venda
+        description: "Dia do mes da venda (1-31)"
+        tests: [not_null]
+      - name: dia_semana_nome
+        description: "Nome do dia da semana em portugues"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado']
+      - name: hora_venda
+        description: "Hora da venda (0-23)"
+        tests: [not_null]
+      - name: receita_total
+        description: "Soma da receita no periodo"
+        tests: [not_null]
+      - name: quantidade_total
+        description: "Soma de itens vendidos no periodo"
+        tests: [not_null]
+      - name: total_vendas
+        description: "Numero de pedidos distintos no periodo"
+        tests: [not_null]
+      - name: total_clientes_unicos
+        description: "Numero de clientes distintos que compraram no periodo"
+        tests: [not_null]
+      - name: ticket_medio
+        description: "Receita media por transacao no periodo"
+        tests: [not_null]
