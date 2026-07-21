@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: clientes_segmentacao
+    description: "KPI de segmentacao de clientes por receita acumulada. Responde: quais sao meus melhores clientes?"
+    columns:
+      - name: cliente_id
+        description: "PK - ID do cliente"
+        tests: [not_null, unique]
+      - name: nome_cliente
+        description: "Nome completo do cliente"
+        tests: [not_null]
+      - name: estado
+        description: "Estado (UF) do cliente"
+        tests: [not_null]
+      - name: receita_total
+        description: "Receita total acumulada do cliente em todas as compras"
+        tests: [not_null]
+      - name: total_compras
+        description: "Numero total de compras distintas realizadas pelo cliente"
+        tests: [not_null]
+      - name: ticket_medio
+        description: "Ticket medio por compra do cliente"
+        tests: [not_null]
+      - name: primeira_compra
+        description: "Data da primeira compra do cliente"
+        tests: [not_null]
+      - name: ultima_compra
+        description: "Data da ultima compra do cliente"
+        tests: [not_null]
+      - name: segmento_cliente
+        description: "Segmento calculado por receita: VIP (>=10k) / TOP_TIER (>=5k) / REGULAR (<5k). Limiares configurados via vars."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['VIP', 'TOP_TIER', 'REGULAR']
+      - name: ranking_receita
+        description: "Posicao do cliente no ranking geral por receita decrescente"
+        tests: [not_null]

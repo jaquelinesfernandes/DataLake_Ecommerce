@@ -1,0 +1,88 @@
+version: 2
+
+models:
+  - name: bronze_vendas
+    description: "Copia exata de raw.vendas. View sem transformacao. Primeira camada da arquitetura Medalhao."
+    columns:
+      - name: id_venda
+        description: "PK - ID unico da venda"
+        tests: [not_null, unique]
+      - name: data_venda
+        description: "Data e hora da venda (timestamp)"
+        tests: [not_null]
+      - name: id_cliente
+        description: "FK -> clientes.id_cliente"
+        tests: [not_null]
+      - name: id_produto
+        description: "FK -> produtos.id_produto"
+        tests: [not_null]
+      - name: canal_venda
+        description: "Canal de venda (ecommerce, loja_fisica)"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['ecommerce', 'loja_fisica']
+      - name: quantidade
+        description: "Quantidade de itens vendidos"
+        tests: [not_null]
+      - name: preco_unitario
+        description: "Preco unitario praticado na venda"
+        tests: [not_null]
+
+  - name: bronze_clientes
+    description: "Copia exata de raw.clientes. View sem transformacao."
+    columns:
+      - name: id_cliente
+        description: "PK - ID unico do cliente"
+        tests: [not_null, unique]
+      - name: nome_cliente
+        description: "Nome completo do cliente"
+        tests: [not_null]
+      - name: estado
+        description: "Estado (UF) do cliente"
+        tests: [not_null]
+      - name: pais
+        description: "Pais do cliente"
+        tests: [not_null]
+      - name: data_cadastro
+        description: "Data e hora de cadastro (timestamp)"
+        tests: [not_null]
+
+  - name: bronze_produtos
+    description: "Copia exata de raw.produtos. View sem transformacao."
+    columns:
+      - name: id_produto
+        description: "PK - ID unico do produto"
+        tests: [not_null, unique]
+      - name: nome_produto
+        description: "Nome do produto"
+        tests: [not_null]
+      - name: categoria
+        description: "Categoria do produto"
+        tests: [not_null]
+      - name: marca
+        description: "Marca do produto"
+        tests: [not_null]
+      - name: preco_atual
+        description: "Preco atual de venda"
+        tests: [not_null]
+      - name: data_criacao
+        description: "Data de criacao no catalogo (timestamp)"
+        tests: [not_null]
+
+  - name: bronze_preco_competidores
+    description: "Copia exata de raw.preco_competidores. View sem transformacao."
+    columns:
+      - name: id_produto
+        description: "FK -> produtos.id_produto"
+        tests: [not_null]
+      - name: nome_concorrente
+        description: "Nome do concorrente monitorado"
+        tests: [not_null]
+      - name: preco_concorrente
+        description: "Preco praticado pelo concorrente no momento da coleta"
+        tests: [not_null]
+      - name: data_coleta
+        description: "Data e hora da coleta (timestamp)"
+        tests: [not_null]
