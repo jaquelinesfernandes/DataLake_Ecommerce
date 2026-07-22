@@ -1,5 +1,11 @@
 # 🛒 DataLake E-commerce — Pipeline Analítico com dbt, Dashboard e Agente de IA
 
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)
+![dbt](https://img.shields.io/badge/dbt-1.x-FF694B?style=flat&logo=dbt&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.x-FF4B4B?style=flat&logo=streamlit&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=flat&logo=postgresql&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat)
+
 Projeto completo de **engenharia de dados e inteligência analítica** para um e-commerce brasileiro. Implementa uma **Arquitetura Medalhão** (Bronze → Silver → Gold) sobre PostgreSQL no Supabase, com dois cases de consumo dos dados: um **dashboard executivo** em Streamlit e um **agente de IA** com bot no Telegram.
 
 ---
@@ -7,8 +13,13 @@ Projeto completo de **engenharia de dados e inteligência analítica** para um e
 ## 🗺️ Visão Geral do Projeto
 
 ```
-  PostgreSQL (Supabase)
+  Supabase Storage (S3)
          │
+         │  datalake_el.py  (Extract & Load)
+         ▼
+  PostgreSQL — schema public (raw)
+         │
+         │  dbt run  (Transform)
          ▼
   ┌─────────────┐
   │   BRONZE    │  views — cópia fiel da fonte
@@ -34,7 +45,21 @@ Projeto completo de **engenharia de dados e inteligência analítica** para um e
 
 ## 🏗️ Fases do Desenvolvimento
 
-### 🔵 Fase 1 — Modelagem de Dados com dbt
+### 🔵 Fase 1 — Ingestão de Dados (`datalake_el.py`)
+
+Script de **Extract & Load** que conecta ao Supabase Storage (S3-compatible), baixa os arquivos `.parquet` das 4 tabelas brutas e os carrega no PostgreSQL, criando as tabelas raw que servem de fonte para o pipeline dbt.
+
+```
+Supabase Storage  →  datalake_el.py  →  PostgreSQL (schema public)
+  produtos.parquet                         raw.produtos
+  clientes.parquet                         raw.clientes
+  vendas.parquet                           raw.vendas
+  preco_competidores.parquet               raw.preco_competidores
+```
+
+---
+
+### 🔵 Fase 2 — Modelagem de Dados com dbt
 
 Construção do pipeline de transformação completo seguindo a **Arquitetura Medalhão**:
 
@@ -54,7 +79,7 @@ Construção do pipeline de transformação completo seguindo a **Arquitetura Me
 
 ---
 
-### 📊 Fase 2 — Dashboard Executivo (Case 01)
+### 📊 Fase 3 — Dashboard Executivo (Case 01)
 
 Dashboard interativo em Streamlit para 3 diretores, consumindo os Data Marts gold em tempo real.
 
@@ -65,7 +90,7 @@ Dashboard interativo em Streamlit para 3 diretores, consumindo os Data Marts gol
 
 ---
 
-### 🤖 Fase 3 — Agente de IA com Bot Telegram (Case 02)
+### 🤖 Fase 4 — Agente de IA com Bot Telegram (Case 02)
 
 Sistema de inteligência analítica com 3 capacidades:
 
@@ -82,7 +107,8 @@ Sistema de inteligência analítica com 3 capacidades:
 |-----------|--------|-----|
 | **dbt Core** | 1.x | Orquestração e transformação de dados |
 | **PostgreSQL** | 15 | Banco de dados analítico |
-| **Supabase** | — | Host gerenciado do PostgreSQL |
+| **Supabase** | — | Host gerenciado do PostgreSQL + Storage S3-compatible |
+| **boto3** | — | Leitura dos arquivos `.parquet` do Supabase Storage |
 | **dbt-utils** | — | Macros utilitárias |
 | **dbt-expectations** | — | Testes de qualidade avançados |
 | **dbt-date** | — | Manipulação de datas |
@@ -112,54 +138,61 @@ Sistema de inteligência analítica com 3 capacidades:
 ## 📁 Estrutura do Projeto
 
 ```
-dbt_ecommerce/
-├── dbt_project.yml                       # Configuração principal
-├── packages.yml                          # Pacotes dbt
-├── models/
-│   ├── _sources.yml                      # Declaração das tabelas brutas (raw)
-│   ├── exposures.yml                     # Dashboard e agente como exposures
-│   ├── bronze/
-│   │   ├── schema.yml
-│   │   ├── bronze_vendas.sql
-│   │   ├── bronze_clientes.sql
-│   │   ├── bronze_produtos.sql
-│   │   └── bronze_preco_competidores.sql
-│   ├── silver/
-│   │   ├── schema.yml
-│   │   ├── silver_vendas.sql             # Incremental
-│   │   ├── silver_clientes.sql
-│   │   ├── silver_produtos.sql
-│   │   └── silver_preco_competidores.sql
-│   ├── intermediate/
-│   │   ├── int_receita_por_cliente.sql   # Ephemeral
-│   │   └── int_vendas_por_produto.sql    # Ephemeral
-│   └── gold/
-│       ├── sales/
-│       │   ├── schema.yml
-│       │   └── vendas_temporais.sql
-│       ├── customer_success/
-│       │   ├── schema.yml
-│       │   └── clientes_segmentacao.sql
-│       └── pricing/
-│           ├── schema.yml
-│           └── precos_competitividade.sql
-├── macros/
-│   ├── get_segmento_cliente.sql
-│   └── get_faixa_preco.sql
-├── case-01-dashboard/                    # Dashboard Streamlit
-│   ├── app.py
-│   ├── requirements.txt
-│   └── .llm/
-│       ├── prd-dashboard.md
-│       └── database.md
-└── case-02-agente/                       # Agente IA + Bot Telegram
-    ├── db.py
-    ├── agente.py
-    ├── bot.py
-    ├── requirements.txt
-    └── .llm/
-        ├── prd.md
-        └── database.md
+DataLake_Ecommerce/
+├── datalake_el.py                        # Script EL: Supabase Storage → PostgreSQL
+├── requirements.txt                      # Dependências do script EL
+├── .env.example                          # Template de variáveis de ambiente (copiar para .env)
+├── .gitignore
+└── dbt_ecommerce/
+    ├── dbt_project.yml                   # Configuração principal
+    ├── packages.yml                      # Pacotes dbt
+    ├── models/
+    │   ├── _sources.yml                  # Declaração das tabelas brutas (raw)
+    │   ├── exposures.yml                 # Dashboard e agente como exposures
+    │   ├── bronze/
+    │   │   ├── schema.yml
+    │   │   ├── bronze_vendas.sql
+    │   │   ├── bronze_clientes.sql
+    │   │   ├── bronze_produtos.sql
+    │   │   └── bronze_preco_competidores.sql
+    │   ├── silver/
+    │   │   ├── schema.yml
+    │   │   ├── silver_vendas.sql         # Incremental
+    │   │   ├── silver_clientes.sql
+    │   │   ├── silver_produtos.sql
+    │   │   └── silver_preco_competidores.sql
+    │   ├── intermediate/
+    │   │   ├── int_receita_por_cliente.sql   # Ephemeral
+    │   │   └── int_vendas_por_produto.sql    # Ephemeral
+    │   └── gold/
+    │       ├── sales/
+    │       │   ├── schema.yml
+    │       │   └── vendas_temporais.sql
+    │       ├── customer_success/
+    │       │   ├── schema.yml
+    │       │   └── clientes_segmentacao.sql
+    │       └── pricing/
+    │           ├── schema.yml
+    │           └── precos_competitividade.sql
+    ├── macros/
+    │   ├── get_segmento_cliente.sql
+    │   └── get_faixa_preco.sql
+    ├── snapshots/
+    │   └── snapshot_preco_competidores.sql
+    ├── case-01-dashboard/                # Dashboard Streamlit
+    │   ├── app.py
+    │   ├── requirements.txt
+    │   └── .llm/
+    │       ├── prd-dashboard.md
+    │       └── database.md
+    └── case-02-agente/                   # Agente IA + Bot Telegram
+        ├── db.py
+        ├── agente.py
+        ├── bot.py
+        ├── requirements.txt
+        └── .llm/
+            ├── prd.md
+            └── database.md
 ```
 
 ---
@@ -231,29 +264,65 @@ Comparativo de preços vs concorrência. Responde: *como estamos posicionados no
 
 ### Pré-requisitos
 
+- Python 3.10+
+- Conta no [Supabase](https://supabase.com) com projeto PostgreSQL e Storage configurados
+- Token de bot Telegram (via `@BotFather`) e chave da API Anthropic — apenas para o Case 02
+
+---
+
+### Passo 1 — Ingestão de dados (`datalake_el.py`)
+
 ```bash
+# Na raiz do projeto
+pip install -r requirements.txt
+
+# Copiar o template e preencher as credenciais
+cp .env.example .env
+```
+
+Edite o `.env` com os valores do seu projeto Supabase:
+
+```env
+S3_ENDPOINT_URL=https://SEU_PROJECT_REF.storage.supabase.co/storage/v1/s3
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=sua_access_key
+AWS_SECRET_ACCESS_KEY=sua_secret_key
+BUCKET_NAME=datalake_ecommerce
+DATABASE_URL=postgresql+psycopg2://postgres:SUA_SENHA@db.SEU_PROJECT_REF.supabase.co:6543/postgres
+```
+
+> As chaves S3 estão em **Supabase Dashboard → Storage → S3 Connection**.  
+> O `PROJECT_REF` é o ID do projeto (ex: `abcdefghijklmnop`).
+
+```bash
+python datalake_el.py
+```
+
+---
+
+### Passo 2 — Pipeline dbt
+
+```bash
+cd dbt_ecommerce
 pip install dbt-postgres
 ```
 
-### Configuração do `profiles.yml`
+Configure o `profiles.yml` em `~/.dbt/profiles.yml`:
 
 ```yaml
-# ~/.dbt/profiles.yml
 dbt_ecommerce:
   outputs:
     dev:
       type: postgres
-      host: <supabase-host>
+      host: db.SEU_PROJECT_REF.supabase.co
       port: 5432
       dbname: postgres
-      user: <usuario>
-      pass: <senha>
+      user: postgres
+      pass: SUA_SENHA
       schema: public
       threads: 1
   target: dev
 ```
-
-### Pipeline dbt
 
 ```bash
 dbt debug                              # Verificar conexão
@@ -276,16 +345,18 @@ dbt run --select +vendas_temporais
 dbt run --vars '{"segmentacao_vip_threshold": 15000}'
 ```
 
-### Case 01 — Dashboard Streamlit
+---
+
+### Passo 3a — Dashboard Streamlit (Case 01)
 
 ```bash
-cd case-01-dashboard
+cd dbt_ecommerce/case-01-dashboard
 pip install -r requirements.txt
 
 # Criar .env com credenciais Supabase:
-# SUPABASE_HOST=...
-# SUPABASE_USER=...
-# SUPABASE_PASSWORD=...
+# SUPABASE_HOST=db.SEU_PROJECT_REF.supabase.co
+# SUPABASE_USER=postgres
+# SUPABASE_PASSWORD=SUA_SENHA
 # SUPABASE_DB=postgres
 # SUPABASE_PORT=5432
 
@@ -293,15 +364,17 @@ streamlit run app.py
 # Acessa em http://localhost:8501
 ```
 
-### Case 02 — Agente IA + Bot Telegram
+---
+
+### Passo 3b — Agente IA + Bot Telegram (Case 02)
 
 ```bash
-cd case-02-agente
+cd dbt_ecommerce/case-02-agente
 pip install -r requirements.txt
 
 # Criar .env:
 # TELEGRAM=token-do-botfather
-# POSTGRES_URL=postgresql://user:pass@host:5432/dbname
+# POSTGRES_URL=postgresql://postgres:SUA_SENHA@db.SEU_PROJECT_REF.supabase.co:5432/postgres
 # ANTHROPIC_API_KEY=sk-ant-...
 # CHAT_ID=  (preenchido automaticamente na primeira interação)
 
@@ -402,9 +475,9 @@ raw.vendas             → bronze_vendas             → silver_vendas          
 | Prática | Implementação |
 |---------|--------------|
 | **Separação de responsabilidades** | `db.py` (conexão), `agente.py` (lógica de IA), `bot.py` (interface Telegram) — cada arquivo com uma única função |
-| **Variáveis de ambiente** | Credenciais em `.env` via `python-dotenv`, nunca hardcoded no código |
-| **Validação de entrada** | `db.py` rejeita qualquer SQL que não comece com `SELECT` ou `WITH`, prevenindo queries de escrita acidentais |
-| **Gestão de erros** | Tratamento separado para falha de banco (antes de chamar a API) e falha de API (fallback com dados brutos) |
+| **Variáveis de ambiente** | Credenciais em `.env` via `python-dotenv`, nunca hardcoded no código — template disponível em `.env.example` |
+| **Validação de entrada (SQL)** | `db.py` rejeita qualquer SQL que não comece com `SELECT` ou `WITH` e bloqueia palavras-chave DML (`DELETE`, `UPDATE`, `INSERT`, `DROP`, etc.) via regex — prevenindo operações destrutivas mesmo dentro de CTEs |
+| **Gestão de erros** | Tratamento separado para falha de banco (antes de chamar a API) e falha de API (fallback com dados brutos); erros internos logados no servidor sem expor detalhes ao usuário |
 | **Auto-registro** | `salvar_chat_id()` atualiza o `.env` na primeira interação, sem precisar de configuração manual |
 | **Paginação de mensagens** | Split automático em chunks de 4.096 chars com fallback de Markdown para texto puro no Telegram |
 | **Limites de segurança** | Máximo de 10 iterações no agentic loop para prevenir loops infinitos e custos inesperados de API |
